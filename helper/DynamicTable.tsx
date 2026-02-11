@@ -1,0 +1,165 @@
+"use client";
+ 
+import Image from "next/image";
+import React from "react";
+import {
+  HiOutlineChevronDown,
+  HiOutlineChevronUp,
+  HiOutlineSelector,
+} from "react-icons/hi";
+ 
+interface ColumnConfig {
+  label: React.ReactNode;
+  width: any;
+  accessor: string;
+  sortable?: boolean;
+  formatter?: (value: any, row: any) => React.ReactNode;
+}
+ 
+interface SortConfig {
+  key: string;
+  direction: "ascending" | "descending";
+}
+ 
+interface DynamicTableProps {
+  columns: ColumnConfig[];
+  data: any[];
+  currentPage?: number;
+  itemsPerPage?: number;
+  onPageChange?: (page: number) => void;
+  onView?: (row: any) => void;
+  onDelete?: (id: any) => void;
+  noDataMessage?: string;
+  sortConfig?: SortConfig | null;
+  onSort?: (key: string) => void;
+  header?: {
+    bg?: string;
+    padding?: string;
+    text?: string;
+    rounded?: string;
+    fontWeight?: string;
+    fontSize?: string;
+  },
+  tableMinWidth?: string;
+  tableMaxWidth?: string;
+}
+ 
+export default function DynamicTable({
+  columns,
+  data,
+  currentPage,
+  itemsPerPage,
+  onPageChange,
+  onView,
+  onDelete,
+  noDataMessage = "No data found.",
+  sortConfig,
+  onSort,
+  header
+}: DynamicTableProps) {
+  // const totalPages = Math.ceil(data.length / itemsPerPage);
+  // const data = data.slice(
+  //   (currentPage - 1) * itemsPerPage,
+  //   currentPage * itemsPerPage
+  // );
+ 
+  const renderSortIcon = (columnKey: string) => {
+    if (!sortConfig || sortConfig.key !== columnKey) {
+      return <HiOutlineSelector className="w-5 h-5 text-headerColor" />;
+    }
+    if (sortConfig.direction === "ascending") {
+      return <HiOutlineChevronUp className="w-4 h-4" />;
+    }
+    return <HiOutlineChevronDown className="w-4 h-4" />;
+  };
+ 
+  return (
+    <div className="w-full h-full grid">
+      {/* Table Wrapper with Border & Radius */}
+      <div className="overflow-hidden h-full">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left">
+            <thead className="sticky top-0 z-99">
+              <tr style={{borderRadius: '100%'}}>
+                {columns.map((col, index) => (
+                  <th
+                    key={index}
+                    style={{ minWidth: col.width || "auto" }}
+                    className="text-[#687588] whitespace-nowrap text-sm font-normal capitalize  text-descriptionColor"
+                  // onClick={() =>
+                  //   col.sortable && onSort && onSort(col.accessor)
+                  // }
+                  >
+                    <div
+                      className={`flex gap-1 ${col.sortable ? "cursor-pointer" : ""
+                        }`}
+                      style={{ background: header?.bg, padding: header?.padding,color: header?.text, fontWeight: header?.fontWeight, fontSize: header?.fontSize, borderRadius: header?.rounded }}
+                    >
+                      {col.label}
+                      {/* {col.sortable && renderSortIcon(col.accessor)} */}
+                    </div>
+                  </th>
+                ))}
+                {(onView || onDelete) && (
+                  <th className="px-4 py-3 text-base font-medium text-Gray-Black-400 border-b border-border">
+                    Action
+                  </th>
+                )}
+              </tr>
+            </thead>
+            <tbody>
+              {data.length > 0 ? (
+                data.map((row, i) => (
+                  <tr key={i} className="">
+                    {columns.map((col, idx) => (
+                      <td
+                        key={idx}
+                        style={{ width: col.width || "auto" }}
+                        className="text-Gray-Black-400"
+                      >
+                        {col.formatter
+                          ? col.formatter(row[col.accessor], row)
+                          : row[col.accessor]}
+                      </td>
+                    ))}
+                    {(onView || onDelete) && (
+                      <td className="px-4 py-3 flex gap-4 items-center">
+                        {onView && (
+                          <span
+                            className="text-sm underline text-Gray-Black-400  cursor-pointer"
+                            onClick={() => onView(row)}
+                          >
+                            View details
+                          </span>
+                        )}
+                        {onDelete && (
+                          <Image
+                            onClick={() => onDelete(row.id)}
+                            src="/dashboard/icon/delete.svg"
+                            alt="delete"
+                            width={16}
+                            height={16}
+                            className="cursor-pointer"
+                          />
+                        )}
+                      </td>
+                    )}
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td
+                    colSpan={columns.length + 1}
+                    className="px-4 py-10 text-center text-Gray-Black-400 text-sm"
+                  >
+                    {noDataMessage}
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
+}
