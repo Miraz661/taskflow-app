@@ -57,7 +57,7 @@ const projects = [
     }
 ]
 
-export default function Sidebar() {
+export default function Sidebar({ handleProjectModalOpen }: { handleProjectModalOpen: () => void }) {
     const pathname = usePathname();
     const [openDropdown, setOpenDropdown] = useState<string | null>(null);
     const isActive = (href: string) => {
@@ -83,7 +83,7 @@ export default function Sidebar() {
                     <div className="space-y-3">
                         <div className="px-3 py-2 flex items-center justify-between">
                             <h1 className="text-xs text-gray-500 uppercase tracking-wide">My Projects</h1>
-                            <button type="button" className="w-fit h-fit p-1 cursor-pointer text-gray-500 hover:bg-gray-100 rounded transition-colors" title="Create projects"><FaPlus size={12} /></button>
+                            <button type="button" onClick={handleProjectModalOpen} className="w-fit h-fit p-1 cursor-pointer text-gray-500 hover:bg-gray-100 rounded transition-colors" title="Create projects"><FaPlus size={12} /></button>
                         </div>
                         <ul className="px-2">
                             {projects.map((project) => (
