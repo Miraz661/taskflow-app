@@ -26,7 +26,8 @@ import {
     SelectItem,
     SelectTrigger,
     SelectValue,
-} from "@/components/ui/select"
+} from "@/components/ui/select";
+import { useProjectContext } from "./MainLayout";
 
 type PropType = {
     handleOpenCreateModal: () => void,
@@ -241,6 +242,7 @@ const CreateTaskModal = ({ handleOpenCreateModal }: { handleOpenCreateModal: () 
     const [date, setDate] = useState<Date>()
     const [project, setProject] = useState<string>()
     const [isDatePickerOpen, setIsDatePickerOpen] = useState(false)
+    const { projects } = useProjectContext();
 
     const onSubmit = (data: {
         title: string,
@@ -348,9 +350,9 @@ const CreateTaskModal = ({ handleOpenCreateModal }: { handleOpenCreateModal: () 
                                 <SelectValue placeholder="Select a project" />
                             </SelectTrigger>
                             <SelectContent className="z-9999" position="popper">
-                                <SelectItem value="website-redesign">Website Redesign</SelectItem>
-                                <SelectItem value="mobile-app">Mobile App</SelectItem>
-                                <SelectItem value="marketing">Marketing</SelectItem>
+                                {projects?.map((project) => (
+                                    <SelectItem key={project._id} value={project?._id}>{project.name}</SelectItem>
+                                ))}
                             </SelectContent>
                         </Select>
                     </div>

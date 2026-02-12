@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { FiInbox } from "react-icons/fi";
 import { BiCalendarWeek } from "react-icons/bi";
 import { FaRegCalendarAlt } from "react-icons/fa";
@@ -18,7 +18,11 @@ import {
     DropdownMenuLabel,
     DropdownMenuSeparator,
     DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+} from "@/components/ui/dropdown-menu";
+import type { Project } from "@/app/type";
+import { UserService } from "@/usersService/user.service";
+import { toast } from "react-hot-toast";
+import { useProjectContext } from "./MainLayout";
 
 
 const menuItems = [
@@ -44,25 +48,16 @@ const menuItems = [
     }
 ]
 
-const projects = [
-    {
-        name: "Marketing",
-        color: "bg-blue-500"
-    }, {
-        name: "Design",
-        color: "bg-green-500"
-    }, {
-        name: "Development",
-        color: "bg-orange-500"
-    }
-]
 
 export default function Sidebar({ handleProjectModalOpen }: { handleProjectModalOpen: () => void }) {
     const pathname = usePathname();
     const [openDropdown, setOpenDropdown] = useState<string | null>(null);
+    const { projects } = useProjectContext();
     const isActive = (href: string) => {
         return pathname === href;
     }
+    
+
     return (
         <div className="w-fit h-full">
             <div className="w-63.75 border-r border-gray-200 h-full grid grid-rows-[96px_1fr] grid-cols-1">
@@ -89,7 +84,7 @@ export default function Sidebar({ handleProjectModalOpen }: { handleProjectModal
                             {projects.map((project) => (
                                 <li className={`group flex items-center justify-between px-3 py-2 rounded cursor-default duration-300 ${openDropdown === project.name ? "bg-gray-100" : "hover:bg-gray-100"}`} key={project.name}>
                                     <div className="flex items-center gap-2">
-                                        <div className={`w-3 h-3 rounded-full ${project.color}`}></div>
+                                        <div className={`w-3 h-3 rounded-full`} style={{ backgroundColor: project.color }}></div>
                                         <span className="ml-2 text-gray-700">{project.name}</span>
                                     </div>
                                     <DropdownMenu open={openDropdown === project.name} onOpenChange={(isOpen) => setOpenDropdown(isOpen ? project.name : null)}>
