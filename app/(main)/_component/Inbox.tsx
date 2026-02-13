@@ -31,7 +31,7 @@ import { useProjectContext } from "./MainLayout";
 
 type PropType = {
     handleOpenCreateModal: () => void,
-    isCreateModalOpen: boolean
+    isCreateModalOpen: boolean,
 }
 
 export default function Inbox({ handleOpenCreateModal, isCreateModalOpen }: PropType) {
@@ -89,6 +89,7 @@ export default function Inbox({ handleOpenCreateModal, isCreateModalOpen }: Prop
     ]);
 
     const [deletedTaskId, setDeletedTaskId] = useState<string>("");
+    const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
 
     const toggleTaskCompletion = (taskId: string) => {
         setSampleTask(prevTasks =>
@@ -111,6 +112,11 @@ export default function Inbox({ handleOpenCreateModal, isCreateModalOpen }: Prop
         setDeletedTaskId("");
     };
 
+    const handleEditTask = (taskId: string) => {
+        setEditingTaskId(taskId);
+        handleOpenCreateModal();
+    }
+
     return (
         <div className="w-full h-full px-4 py-4 md:px-6 md:py-6 xl:px-8 xl:py-7 2xl:px-12 2xl:py-8 space-y-8 bg-[#f9fafb]">
             <div className="flex flex-wrap gap-6">
@@ -126,6 +132,7 @@ export default function Inbox({ handleOpenCreateModal, isCreateModalOpen }: Prop
                             data={task}
                             toggleTaskCompletion={toggleTaskCompletion}
                             handleDeleteTask={handleDeleteTask}
+                            handleEditTask={handleEditTask}
                         />
                     ))}
                 </div>
@@ -139,6 +146,7 @@ export default function Inbox({ handleOpenCreateModal, isCreateModalOpen }: Prop
                             data={task}
                             toggleTaskCompletion={toggleTaskCompletion}
                             handleDeleteTask={handleDeleteTask}
+                            handleEditTask={handleEditTask}
                         />
                     ))}
                 </div>
@@ -149,13 +157,16 @@ export default function Inbox({ handleOpenCreateModal, isCreateModalOpen }: Prop
                 onCancel={handleCancelDelete}
                 description="You want to delete this task!"
             />
-            {isCreateModalOpen && <CreateTaskModal handleOpenCreateModal={handleOpenCreateModal} />}
+            {isCreateModalOpen && <CreateTaskModal
+                handleOpenCreateModal={handleOpenCreateModal}
+                editingTaskId={editingTaskId}
+            />}
         </div>
     )
 }
 
 
-const TaskProgressCard = () => {
+export const TaskProgressCard = () => {
     return (
         <div className="flex-1 p-6 border border-gray-200 rounded-2xl space-y-3 text-gray-600 bg-white">
             <div className="flex items-center justify-between gap-4">
@@ -172,15 +183,17 @@ const TaskProgressCard = () => {
     )
 }
 
-const TaskCard = (
+export const TaskCard = (
     {
         data,
         toggleTaskCompletion,
-        handleDeleteTask
+        handleDeleteTask,
+        handleEditTask
     }: {
         data: Task,
         toggleTaskCompletion: (taskId: string) => void,
-        handleDeleteTask: (taskId: string) => void
+        handleDeleteTask: (taskId: string) => void,
+        handleEditTask: (taskId: string) => void
     }) => {
     return (
         <div className="group bg-white rounded-xl p-5 border border-gray-200 hover:border-gray-300 hover:shadow-sm transition-all">
@@ -214,7 +227,7 @@ const TaskCard = (
                     </div>
                 </div>
                 <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all">
-                    <button className="cursor-pointer p-2 -m-2 text-gray-400 hover:text-blue-600 transition-all" title="Edit task">
+                    <button className="cursor-pointer p-2 -m-2 text-gray-400 hover:text-blue-600 transition-all" title="Edit task" onClick={() => handleEditTask(data.id)}>
                         <CiEdit size={20} />
                     </button>
                     <button onClick={() => handleDeleteTask(data.id)} className="cursor-pointer p-2 -m-2 text-gray-400 hover:text-red-600 transition-all" title="Delete task">
@@ -226,8 +239,13 @@ const TaskCard = (
     )
 }
 
+type CreateTaskModalPropType = {
+    handleOpenCreateModal: () => void,
+    projectId?: string,
+    editingTaskId: string | null
+}
 
-const CreateTaskModal = ({ handleOpenCreateModal }: { handleOpenCreateModal: () => void }) => {
+export const CreateTaskModal = ({ handleOpenCreateModal, projectId, editingTaskId }: CreateTaskModalPropType) => {
     const { register, handleSubmit, formState: { errors }, reset, setValue } = useForm<{
         title: string,
         priority: string,
@@ -235,12 +253,13 @@ const CreateTaskModal = ({ handleOpenCreateModal }: { handleOpenCreateModal: () 
         project?: string
     }>({
         defaultValues: {
-            priority: "medium"
+            priority: "medium",
+            project: projectId
         }
     });
 
     const [date, setDate] = useState<Date>()
-    const [project, setProject] = useState<string>()
+    const [project, setProject] = useState<string>(projectId || "")
     const [isDatePickerOpen, setIsDatePickerOpen] = useState(false)
     const { projects } = useProjectContext();
 
@@ -253,12 +272,12 @@ const CreateTaskModal = ({ handleOpenCreateModal }: { handleOpenCreateModal: () 
         console.log(data);
         reset();
         setDate(undefined);
-        setProject(undefined);
+        setProject("");
     }
 
     return (
         <ModalWrapper onClose={handleOpenCreateModal}>
-            <div className="w-full max-w-lg bg-white rounded-2xl shadow-sm" onClick={(e)=>e.stopPropagation()}>
+            <div className="w-full max-w-lg bg-white rounded-2xl shadow-sm" onClick={(e) => e.stopPropagation()}>
                 <h2 className="text-xl font-normal p-5 border-b text-gray-900">Create New Task</h2>
                 <form onSubmit={handleSubmit(onSubmit)} className="p-5 space-y-6">
                     <div className="space-y-2 text-gray-700">

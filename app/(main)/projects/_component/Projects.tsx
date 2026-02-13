@@ -5,13 +5,14 @@ import type { Project } from "@/app/type";
 import { useEffect, useState } from "react";
 import { UserService } from "@/usersService/user.service";
 import { toast } from "react-hot-toast";
+import Link from "next/link";
 
 export default function Projects({projects}: {projects: Project[]}) {
     return (
         <div className="w-full h-full grid px-4 py-4 md:px-6 md:py-6 xl:px-8 xl:py-7 2xl:px-12 2xl:py-8 space-y-8 bg-[#f9fafb]">
             {projects.length > 0 && <div className="flex flex-wrap gap-4 h-fit">
                 {projects.map((project) => (
-                    <ProjectCard key={project.id} data={project} />
+                    <ProjectCard key={project._id} data={project} />
                 ))}
             </div>}
             {projects.length === 0 && <div className="w-full h-full flex items-center justify-center">
@@ -24,7 +25,7 @@ export default function Projects({projects}: {projects: Project[]}) {
 
 const ProjectCard = ({ data }: { data: Project }) => {
     return (
-        <div className="flex-1 grid p-6 border border-gray-200 rounded-2xl hover:shadow-lg transition-all cursor-pointer group bg-white space-y-4">
+        <Link href={`/projects/${data._id}`} className="flex-1 grid p-6 border border-gray-200 rounded-2xl hover:shadow-lg transition-all cursor-pointer group bg-white space-y-4">
             <div>
                 <h2 className="text-lg text-gray-700">{data.name}</h2>
                 <p className="text-gray-500">{data.description}</p>
@@ -55,6 +56,6 @@ const ProjectCard = ({ data }: { data: Project }) => {
                     </div>
                 </div>}
             </div>
-        </div>
+        </Link>
     )
 }

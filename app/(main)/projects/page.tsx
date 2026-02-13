@@ -53,7 +53,7 @@ const colorOptions = [
     { value: "teal", label: "Teal", hex: "#14b8a6" },
 ];
 
-export const CreateProjectModal = ({ onClose, onSuccess }: { onClose: () => void, onSuccess?: () => void }) => {
+export const CreateProjectModal = ({ onClose, onSuccess, projectId }: { onClose: () => void, onSuccess?: () => void, projectId?: string }) => {
     const { register, handleSubmit, formState: { errors } } = useForm<Project>();
     const [loading, setLoading] = useState<boolean>(false);
     const [submitting, setSubmitting] = useState<boolean>(false);
@@ -75,6 +75,7 @@ export const CreateProjectModal = ({ onClose, onSuccess }: { onClose: () => void
         setSubmitting(true);
         try {
             const project: Project = {
+                _id: data._id,
                 name: data.name,
                 description: data.description,
                 color: data.color,
