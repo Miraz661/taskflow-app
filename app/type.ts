@@ -9,3 +9,15 @@ export type Task = {
     createdAt: string;
     updatedAt: string;
 }
+
+export type Project = {
+    _id: string;
+    name: string;
+    description?: string;
+    color: string;
+    goal?: string;
+    tags?: string[];
+    taskCompleted?: number;
+    taskPending?: number;
+    taskTotal?: number;
+}

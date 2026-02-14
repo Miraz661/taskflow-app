@@ -1,16 +1,21 @@
 'use client'
 
 import { FaPlus } from "react-icons/fa6";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import ModalWrapper from "@/helper/ModalWrapper";
 import { useForm } from "react-hook-form";
 import { IoMdClose } from "react-icons/io";
 import { LuTarget } from "react-icons/lu";
 import { FaTags } from "react-icons/fa";
 import Projects from "./_component/Projects";
+import type { Project } from "@/app/type";
+import { UserService } from "@/usersService/user.service";
+import toast from "react-hot-toast";
+import { useProjectContext } from "../_component/MainLayout";
 
 export default function page() {
     const [isCreateModalOpen, setIsCreateModalOpen] = useState<boolean>(false);
+    const { projects, getProjects } = useProjectContext();
 
     const handleOpenCreateModal = () => {
         setIsCreateModalOpen(prev => !prev);
@@ -28,10 +33,10 @@ export default function page() {
                     <span>New Project</span>
                 </button>
             </div>
-            <div className="w-full h-full min-h-0 overflow-y-auto">
-                <Projects />
+            <div className="w-full h-full grid min-h-0 overflow-y-auto">
+                <Projects projects={projects} />
             </div>
-            {isCreateModalOpen && <CreateProjectModal onClose={handleOpenCreateModal} />}
+            {isCreateModalOpen && <CreateProjectModal onClose={handleOpenCreateModal} onSuccess={getProjects} />}
         </div>
     )
 }
@@ -48,14 +53,10 @@ const colorOptions = [
     { value: "teal", label: "Teal", hex: "#14b8a6" },
 ];
 
-export const CreateProjectModal = ({ onClose }: { onClose: () => void }) => {
-    const { register, handleSubmit, formState: { errors } } = useForm<{
-        title: string;
-        description: string;
-        color: string;
-        taskGoal?: string;
-    }>();
-
+export const CreateProjectModal = ({ onClose, onSuccess, projectId }: { onClose: () => void, onSuccess?: () => void, projectId?: string }) => {
+    const { register, handleSubmit, formState: { errors } } = useForm<Project>();
+    const [loading, setLoading] = useState<boolean>(false);
+    const [submitting, setSubmitting] = useState<boolean>(false);
     const [tags, setTags] = useState<string[]>([]);
     const [tagInput, setTagInput] = useState<string>("");
 
@@ -70,9 +71,35 @@ export const CreateProjectModal = ({ onClose }: { onClose: () => void }) => {
         setTags(tags.filter(tag => tag !== tagToRemove));
     };
 
-    const onSubmit = (data: { title: string; description: string; color: string; taskGoal?: string }) => {
-        console.log({ ...data, tags });
-        onClose();
+    const onSubmit = async (data: Project) => {
+        setSubmitting(true);
+        try {
+            const project: Project = {
+                _id: data._id,
+                name: data.name,
+                description: data.description,
+                color: data.color,
+                goal: data.goal,
+                tags: tags,
+            };
+            const res = await UserService.createProject(project);
+            console.log("Project created successfully: ", res);
+            if (res?.data?.status === "success") {
+                toast.success("Project created successfully!");
+                setSubmitting(false);
+                onClose();
+                if (onSuccess) {
+                    onSuccess();
+                }
+            }else{
+                toast.error("Failed to create project. Please try again.");
+                setSubmitting(false);
+            }
+        } catch (err) {
+            console.error("Error creating project: ", err);
+            toast.error("An error occurred while creating the project. Please try again.");
+            setSubmitting(false);
+        }
     }
 
     return (
@@ -89,9 +116,9 @@ export const CreateProjectModal = ({ onClose }: { onClose: () => void }) => {
                                     type="text"
                                     placeholder="Enter project name..."
                                     className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg "
-                                    {...register("title", { required: "Task name is required" })}
+                                    {...register("name", { required: "Project name is required" })}
                                 />
-                                {errors.title && <p className="text-sm text-red-600">{errors.title.message}</p>}
+                                {errors.name && <p className="text-sm text-red-600">{errors.name.message}</p>}
                             </div>
                             <div className="space-y-2 text-gray-700">
                                 <label htmlFor="description" className="block text-gray-700">Project Description</label>
@@ -111,7 +138,7 @@ export const CreateProjectModal = ({ onClose }: { onClose: () => void }) => {
                                         <label key={color.value} className="inline-flex items-center">
                                             <input
                                                 type="radio"
-                                                value={color.value}
+                                                value={color.hex}
                                                 {...register("color", { required: "Color is required" })}
                                                 className="sr-only peer"
                                             />
@@ -135,7 +162,7 @@ export const CreateProjectModal = ({ onClose }: { onClose: () => void }) => {
                                     type="number"
                                     placeholder="How many tasks do you want to complete?"
                                     className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg"
-                                    {...register("taskGoal")}
+                                    {...register("goal")}
                                 />
                                 <p className="text-sm text-gray-500">Set a target number of tasks to complete in this project</p>
                             </div>
@@ -163,7 +190,7 @@ export const CreateProjectModal = ({ onClose }: { onClose: () => void }) => {
                                     <button
                                         type="button"
                                         onClick={handleAddTag}
-                                        className="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                                        className="cursor-pointer px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
                                     >
                                         Add
                                     </button>
@@ -190,7 +217,7 @@ export const CreateProjectModal = ({ onClose }: { onClose: () => void }) => {
                             </div>
                             <div className="w-full flex flex-wrap gap-4">
                                 <button type="button" onClick={onClose} className="flex-1 cursor-pointer px-4 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">Cancel</button>
-                                <button type="submit" className="flex-1 cursor-pointer px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">Create Task</button>
+                                <button type="submit" disabled={submitting} className="flex-1 cursor-pointer px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">Create Task</button>
                             </div>
                         </form>
                     </div>
